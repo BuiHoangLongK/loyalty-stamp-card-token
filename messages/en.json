@@ -1,0 +1,45 @@
+{
+  "Metadata": {
+    "title": "KomitSave — Time-Locked Commitment Savings",
+    "description": "Lock USDC on Stellar until your goal date. Genuinely can't withdraw early."
+  },
+  "Hero": {
+    "eyebrow": "KomitSave",
+    "title": "Lock it. Grow it. Claim it.",
+    "subtitle": "Time-locked commitment savings for families in Southeast Asia. Lock USDC until Eid, school fees, or your next big purchase.",
+    "ctaPrimary": "See My Locks",
+    "ctaSecondary": "How It Works"
+  },
+  "Nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "locks": "My Locks",
+    "connectWallet": "Connect wallet",
+    "connecting": "Connecting…",
+    "disconnect": "Disconnect",
+    "language": "Language",
+    "installFreighter": "Install Freighter"
+  },
+  "Connect": {
+    "title": "Connect a wallet",
+    "subtitle": "Pick a Stellar wallet to sign in. Your wallet is your account.",
+    "back": "Back to home",
+    "recommended": "Recommended",
+    "freighterName": "Freighter",
+    "freighterSubtitle": "Browser extension",
+    "installFreighter": "Freighter extension is required to continue.",
+    "signing": "Waiting for signature in Freighter…",
+    "connectedToast": "Wallet connected"
+  },
+  "Auth": {
+    "challengeError": "Could not get auth challenge",
+    "verifyError": "Could not verify signature"
+  },
+  "Dashboard": {
+    "title": "My Savings Locks",
+    "newLock": "New Lock",
+    "totalLocked": "Total Locked",
+    "activeLocks": "Active Locks",
+    "claimable": "Claimable"
+  }
+}

@@ -1,0 +1,333 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-sans);
+  --font-body: var(--font-body);
+
+  /* The :root and .light blocks below store HSL channels (e.g. `0 0% 100%`)
+     without the `hsl()` wrapper. Tailwind v4 utilities like `bg-popover`
+     resolve to `var(--color-popover)`, so the runtime value must itself be
+     a valid CSS color. Wrapping with `hsl(var(--…))` makes `bg-popover`
+     resolve to a valid color. We deliberately omit the `<alpha-value>`
+     placeholder here because Tailwind v4's substitution did not work
+     inside this nested `var()` shape in our build (the value shipped to
+     the browser was `hsl(var(--popover) / <)`, which is invalid CSS).
+     If opacity modifiers like `bg-popover/50` are needed, set them
+     directly via Tailwind's built-in color tokens (e.g. `bg-zinc-500/20`)
+     or via custom CSS. */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-deep: hsl(var(--primary-deep));
+  --color-primary-press: hsl(var(--primary-press));
+  --color-primary-soft: hsl(var(--primary-soft));
+  --color-primary-subdued: hsl(var(--primary-subdued));
+  --color-brand-dark: hsl(var(--brand-dark));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-ink: hsl(var(--ink));
+  --color-ink-secondary: hsl(var(--ink-secondary));
+  --color-ink-mute: hsl(var(--ink-mute));
+  --color-canvas: hsl(var(--canvas));
+  --color-canvas-soft: hsl(var(--canvas-soft));
+  --color-canvas-cream: hsl(var(--canvas-cream));
+  --color-ruby: hsl(var(--ruby));
+  --color-magenta: hsl(var(--magenta));
+  --color-lemon: hsl(var(--lemon));
+  --color-border: hsl(var(--border));
+  --color-hairline: hsl(var(--hairline));
+  --color-hairline-input: hsl(var(--hairline-input));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* Theme-aware colors with built-in alpha. The previous pattern
+     (`bg-primary/20`) relied on Tailwind's <alpha-value> substitution
+     inside `hsl(var(--primary))`, which did not survive our build —
+     the value shipped to the browser was `hsl(var(--primary) / <)`,
+     invalid CSS. These tokens bake the alpha into the color value
+     itself, so `bg-glow-primary` and `bg-surface-inset` resolve to
+     a valid color in both light and dark themes. */
+  --color-glow-primary: hsl(var(--primary) / 0.22);
+  --color-glow-magenta: hsl(var(--magenta) / 0.22);
+  --color-surface-inset: hsl(var(--foreground) / 0.04);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 262 83% 58%; /* violet-600 */
+  --primary-foreground: 0 0% 100%;
+  --primary-deep: 224 76% 48%;
+  --primary-press: 226 71% 40%;
+  --primary-soft: 217 91% 60%;
+  --primary-subdued: 214 95% 93%;
+  --brand-dark: 240 41% 22%;
+  --secondary: 191 100% 56%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 240 6% 14%;
+  --muted-foreground: 240 5% 65%;
+  --accent: 252 99% 64%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 340 84% 52%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 152 60% 36%;
+  --success-foreground: 0 0% 98%;
+  --warning: 32 60% 50%;
+  --warning-foreground: 0 0% 98%;
+  --ink: 212 67% 14%;
+  --ink-secondary: 215 28% 24%;
+  --ink-mute: 215 16% 47%;
+  --canvas: 0 0% 100%;
+  --canvas-soft: 210 40% 98%;
+  --canvas-cream: 36 56% 90%;
+  --ruby: 333 78% 53%;
+  --magenta: 297 95% 70%;
+  --lemon: 30 56% 38%;
+  --border: 240 6% 18%;
+  --hairline: 213 27% 90%;
+  --hairline-input: 210 40% 75%;
+  --input: 240 6% 18%;
+  --ring: 252 99% 64%;
+  --radius: 0.75rem;
+
+  /* Gradient mesh stops. `:root` ships dark colors so the default
+     (no theme class) gets the dark mesh; `.light` overrides to the
+     vibrant on-white variant. Defining the palette as variables here
+     means a single `.gradient-mesh` class can adapt to every theme
+     state — including the default-dark mode that the `dark:` Tailwind
+     modifier misses (it only matches `.dark`, not `:root`). */
+  --mesh-1: rgba(245, 233, 212, 0.15);
+  --mesh-2: rgba(255, 210, 179, 0.12);
+  --mesh-3: rgba(214, 197, 255, 0.18);
+  --mesh-4: rgba(185, 185, 249, 0.18);
+  --mesh-5: rgba(249, 107, 238, 0.12);
+  --mesh-6: rgba(234, 34, 97, 0.12);
+  --mesh-fade: transparent;
+}
+
+.light {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 262 83% 58%; /* violet-600 */
+  --primary-foreground: 0 0% 100%;
+  --primary-deep: 224 76% 48%;
+  --primary-press: 226 71% 40%;
+  --primary-soft: 217 91% 60%;
+  --primary-subdued: 214 95% 93%;
+  --brand-dark: 240 41% 22%;
+  --secondary: 191 100% 56%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 210 40% 98%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 252 99% 64%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 340 84% 52%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 152 60% 36%;
+  --success-foreground: 0 0% 100%;
+  --warning: 32 60% 50%;
+  --warning-foreground: 0 0% 100%;
+  --ink: 212 67% 14%;
+  --ink-secondary: 215 28% 24%;
+  --ink-mute: 215 16% 47%;
+  --canvas: 0 0% 100%;
+  --canvas-soft: 210 40% 98%;
+  --canvas-cream: 36 56% 90%;
+  --ruby: 333 78% 53%;
+  --magenta: 297 95% 70%;
+  --lemon: 30 56% 38%;
+  --border: 213 27% 90%;
+  --hairline: 213 27% 90%;
+  --hairline-input: 210 40% 75%;
+  --input: 213 27% 90%;
+  --ring: 252 99% 64%;
+
+  --mesh-1: #f5e9d4;
+  --mesh-2: #ffd2b3;
+  --mesh-3: #d6c5ff;
+  --mesh-4: #b9b9f9;
+  --mesh-5: #f96bee;
+  --mesh-6: #ea2261;
+  --mesh-fade: #ffffff;
+}
+
+.dark {
+  --background: 240 15% 8%;
+  --foreground: 210 40% 96%;
+
+  --card: 240 14% 11%;
+  --card-foreground: 210 40% 96%;
+
+  --popover: 240 14% 11%;
+  --popover-foreground: 210 40% 96%;
+
+  --primary: 252 99% 72%;
+  --primary-foreground: 240 15% 8%;
+  --primary-deep: 247 80% 65%;
+  --primary-press: 243 65% 55%;
+  --primary-soft: 252 99% 80%;
+  --primary-subdued: 245 35% 28%;
+
+  --brand-dark: 240 25% 88%;
+
+  --secondary: 191 100% 62%;
+  --secondary-foreground: 240 15% 8%;
+
+  --muted: 240 12% 16%;
+  --muted-foreground: 215 18% 68%;
+
+  --accent: 252 99% 72%;
+  --accent-foreground: 240 15% 8%;
+
+  --destructive: 340 84% 62%;
+  --destructive-foreground: 0 0% 100%;
+
+  --success: 152 60% 48%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 32 75% 58%;
+  --warning-foreground: 240 15% 8%;
+
+  --ink: 210 40% 96%;
+  --ink-secondary: 215 22% 82%;
+  --ink-mute: 215 16% 68%;
+
+  --canvas: 240 15% 8%;
+  --canvas-soft: 240 12% 12%;
+  --canvas-cream: 240 10% 14%;
+
+  --ruby: 333 78% 63%;
+  --magenta: 297 95% 76%;
+  --lemon: 40 70% 58%;
+
+  --border: 240 10% 20%;
+  --hairline: 240 10% 20%;
+  --hairline-input: 240 10% 28%;
+  --input: 240 10% 20%;
+
+  --ring: 252 99% 72%;
+  /* `.dark` inherits the `:root` mesh stops — the alpha-reduced palette
+     already blends with both `:root` (240 10% 4%) and `.dark` (240 15% 8%). */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html,
+  body {
+    font-feature-settings:
+      "ss01" on,
+      "ss02" on,
+      "cv11" on;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings:
+      "tnum" on,
+      "lnum" on,
+      "ss01" on;
+  }
+}
+
+@layer utilities {
+  .display-thin {
+    font-weight: 300;
+    letter-spacing: -0.025em;
+  }
+  .display-thin-lg {
+    font-weight: 300;
+    letter-spacing: -0.035em;
+  }
+  .pill-shadow {
+    box-shadow:
+      0 1px 2px rgba(13, 37, 61, 0.06),
+      0 4px 12px rgba(13, 37, 61, 0.04);
+  }
+  .card-shadow {
+    box-shadow:
+      0 8px 24px rgba(13, 37, 61, 0.08),
+      0 2px 6px rgba(13, 37, 61, 0.04);
+  }
+  .gradient-mesh {
+    background:
+      radial-gradient(ellipse 80% 60% at 0% 0%, var(--mesh-1) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 20% 10%, var(--mesh-2) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 60% at 45% 0%, var(--mesh-3) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 70% 0%, var(--mesh-4) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 90% 5%, var(--mesh-5) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 30% at 100% 0%, var(--mesh-6) 0%, transparent 55%),
+      linear-gradient(180deg, var(--mesh-fade) 60%, transparent 100%);
+  }
+
+  .dark .display-thin {
+    font-weight: 300;
+    letter-spacing: -0.025em;
+  }
+
+  .dark .display-thin-lg {
+    font-weight: 300;
+    letter-spacing: -0.035em;
+  }
+
+  .dark .pill-shadow {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+
+  .dark .card-shadow {
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.45),
+      0 2px 8px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+
+  .dark .gradient-mesh {
+    background:
+      radial-gradient(ellipse 80% 60% at 0% 0%, var(--mesh-1) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 20% 10%, var(--mesh-2) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 60% at 45% 0%, var(--mesh-3) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 70% 0%, var(--mesh-4) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 90% 5%, var(--mesh-5) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 30% at 100% 0%, var(--mesh-6) 0%, transparent 55%),
+      linear-gradient(180deg, var(--mesh-fade) 65%, transparent 100%);
+  }
+}

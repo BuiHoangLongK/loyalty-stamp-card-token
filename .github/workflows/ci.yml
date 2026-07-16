@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main, bao, nam, elio]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint + Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: stellar_starter_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DRIZZLE_DATABASE_URL: postgres://postgres:postgres@localhost:5432/stellar_starter_test
+      SESSION_SECRET: ci-test-session-secret-must-be-at-least-32-chars-long
+      SIGNED_ID_SECRET: ci-test-signed-id-secret-must-be-at-least-32-chars
+      CUSTOMER_JWT_SECRET: ci-test-customer-jwt-secret-must-be-at-least-32-chars
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_DEFAULT_LOCALE: en
+      NEXT_PUBLIC_SUPPORTED_LOCALES: en,vi
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Push schema to test DB
+        run: npm run db:push
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          DRIZZLE_DATABASE_URL: postgres://postgres:postgres@localhost:5432/stellar_starter_test
+          SESSION_SECRET: ci-test-session-secret-must-be-at-least-32-chars-long
+          SIGNED_ID_SECRET: ci-test-signed-id-secret-must-be-at-least-32-chars
+          CUSTOMER_JWT_SECRET: ci-test-customer-jwt-secret-must-be-at-least-32-chars
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEXT_PUBLIC_DEFAULT_LOCALE: en
+          NEXT_PUBLIC_SUPPORTED_LOCALES: en,vi

@@ -1,0 +1,700 @@
+{
+  "info": {
+    "_postman_id": "stellar-hub-mvp-2026-06-12",
+    "name": "Universal Merchant Payment Hub — MVP",
+    "description": "Postman collection for the Universal Merchant Payment Hub backend. Covers auth, invoices, off-ramp (cash-out), wallet actions, customer checkout, and the in-app mock anchor. Generated 2026-06-12 against docs/API.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "sessionCookie",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "merchantPubkey",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invoiceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invoiceSignedId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "quoteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "withdrawalId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth (Merchant — Freighter)",
+      "item": [
+        {
+          "name": "POST /api/auth/challenge",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicKey\": \"{{merchantPubkey}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/challenge",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "challenge"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/auth/verify",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicKey\": \"{{merchantPubkey}}\",\n  \"signedNonce\": \"<base64 XDR from Freighter after signing the challenge tx>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verify"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cookies = pm.response.headers.get('set-cookie');",
+                  "if (cookies) {",
+                  "  const m = cookies.match(/stellar_session=([^;]+)/);",
+                  "  if (m) pm.collectionVariables.set('sessionCookie', m[1]);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/auth/me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merchant",
+      "item": [
+        {
+          "name": "GET /api/merchants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchants"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/merchants",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Shop\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchants"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/merchants/me/stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchants/me/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchants", "me", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "POST /api/invoices",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amountMinor\": \"20000000\",\n  \"currency\": \"USD\",\n  \"description\": \"Coffee\",\n  \"ttlSeconds\": 900\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data?.invoice?.id) pm.collectionVariables.set('invoiceId', body.data.invoice.id);",
+                  "if (body.data?.signedId) pm.collectionVariables.set('invoiceSignedId', body.data.signedId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/invoices?limit=20",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices"],
+              "query": [{ "key": "limit", "value": "20" }, { "key": "offset", "value": "0" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/invoices/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/{{invoiceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "{{invoiceId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /api/invoices/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/{{invoiceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "{{invoiceId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/invoices/by-signed/:signedId (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/by-signed/{{invoiceSignedId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "by-signed", "{{invoiceSignedId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/invoices/by-signed/:signedId/status (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/by-signed/{{invoiceSignedId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "by-signed", "{{invoiceSignedId}}", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Checkout (public)",
+      "item": [
+        {
+          "name": "POST /api/checkout/challenge",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicKey\": \"<customer Stellar pubkey>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/challenge",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", "challenge"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/checkout/verify",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicKey\": \"<customer Stellar pubkey>\",\n  \"signedChallengeXdr\": \"<base64 XDR from Freighter>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", "verify"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data?.token) pm.collectionVariables.set('customerToken', body.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/checkout/build",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signedId\": \"{{invoiceSignedId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/build",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", "build"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/checkout/submit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signedId\": \"{{invoiceSignedId}}\",\n  \"signedXdr\": \"<base64 XDR signed by Freighter>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", "submit"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wallet Actions",
+      "item": [
+        {
+          "name": "POST /api/wallet/receive/request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"10.00\",\n  \"memo\": \"Coffee\",\n  \"origin\": \"merchant-app\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/receive/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "receive", "request"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/wallet/send/build",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"G...\",\n  \"amount\": \"5000000\",\n  \"memo\": \"Thanks!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/send/build",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "send", "build"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/wallet/send/submit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signedXdr\": \"<base64 XDR signed by Freighter>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/send/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "send", "submit"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/wallet/convert/quote",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/convert/quote?destinationAssetCode=XLM&destinationAssetIssuer=&amount=20000000&slippageBps=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "convert", "quote"],
+              "query": [
+                { "key": "destinationAssetCode", "value": "XLM" },
+                { "key": "destinationAssetIssuer", "value": "" },
+                { "key": "amount", "value": "20000000" },
+                { "key": "slippageBps", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /api/wallet/convert/build",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quote\": { /* response from /convert/quote */ }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/convert/build",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "convert", "build"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/wallet/convert/submit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signedXdr\": \"<base64 XDR signed by Freighter>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/convert/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "wallet", "convert", "submit"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Off-ramp (Cash Out)",
+      "item": [
+        {
+          "name": "POST /api/offramp/quotes",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellAsset\": \"stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5\",\n  \"buyAsset\": \"iso4217:PHP\",\n  \"sellAmount\": \"5000000\",\n  \"buyDeliveryMethod\": \"cash_pickup\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/offramp/quotes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "offramp", "quotes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data?.id) pm.collectionVariables.set('quoteId', body.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/offramp/withdrawals",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quoteId\": \"{{quoteId}}\",\n  \"payoutMethod\": \"cash_pickup\",\n  \"payoutMeta\": { \"v\": 1, \"kind\": \"cash_pickup\", \"data\": { \"pickupLocation\": \"Manila\", \"recipientName\": \"Alice\" } },\n  \"ttlSeconds\": 1800\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/offramp/withdrawals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "offramp", "withdrawals"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data?.id) pm.collectionVariables.set('withdrawalId', body.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/offramp/withdrawals (start flow)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"withdrawalId\": \"{{withdrawalId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/offramp/withdrawals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "offramp", "withdrawals"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/offramp/withdrawals/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/offramp/withdrawals/{{withdrawalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "offramp", "withdrawals", "{{withdrawalId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Anchors (read-only)",
+      "item": [
+        {
+          "name": "GET /api/anchors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/anchors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "anchors"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/anchors/:domain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/anchors/anchorusd.com",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "anchors", "anchorusd.com"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mock Anchor (in-app)",
+      "item": [
+        {
+          "name": "GET /api/mock-anchor/stellar.toml",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock-anchor/stellar.toml",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mock-anchor", "stellar.toml"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/mock-anchor/sep24/info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock-anchor/sep24/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mock-anchor", "sep24", "info"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/mock-anchor/sep24/transactions/withdraw/interactive",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/mock-anchor/sep24/transactions/withdraw/interactive",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mock-anchor", "sep24", "transactions", "withdraw", "interactive"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/mock-anchor/sep24/transaction?id=...",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock-anchor/sep24/transaction?id=mock-1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mock-anchor", "sep24", "transaction"],
+              "query": [{ "key": "id", "value": "mock-1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /api/mock-anchor/sep38/info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock-anchor/sep38/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mock-anchor", "sep38", "info"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/mock-anchor/sep38/quote",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sell_asset\": \"stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5\",\n  \"buy_asset\": \"iso4217:PHP\",\n  \"sell_amount\": \"5000000\",\n  \"buy_delivery_method\": \"cash_pickup\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mock-anchor/sep38/quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mock-anchor", "sep38", "quote"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
