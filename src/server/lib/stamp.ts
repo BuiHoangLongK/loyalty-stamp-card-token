@@ -3,6 +3,140 @@
  * All functions here are unit-tested.
  */
 
+import { StrKey } from '@stellar/stellar-sdk';
+
+export const STELLAR_NETWORK_PASSPHRASES = {
+  testnet: 'Test SDF Network ; September 2015',
+  public: 'Public Global Stellar Network ; September 2015',
+  futurenet: 'Test SDF Future Network ; October 2022',
+} as const;
+
+export type StellarNetwork = keyof typeof STELLAR_NETWORK_PASSPHRASES;
+export type StampOperation = 'issue' | 'redeem';
+
+export interface StampAssetConfig {
+  assetCode: string;
+  assetIssuer: string;
+  network: StellarNetwork;
+  networkPassphrase: string;
+  horizonUrl: string;
+}
+
+export interface StampConfigValidation {
+  valid: boolean;
+  error?: string;
+}
+
+/**
+ * Validate all chain identity fields before creating a real stamp intent.
+ * The merchant controls the asset code/issuer; network identity is server
+ * configuration and must never be taken from the request body.
+ */
+export function validateStampAssetConfig(config: StampAssetConfig): StampConfigValidation {
+  if (!validateAssetCode(config.assetCode)) {
+    return { valid: false, error: 'Asset code must be 1-12 uppercase letters or digits' };
+  }
+  if (!StrKey.isValidEd25519PublicKey(config.assetIssuer)) {
+    return { valid: false, error: 'Asset issuer must be a valid Stellar public key' };
+  }
+  if (STELLAR_NETWORK_PASSPHRASES[config.network] !== config.networkPassphrase) {
+    return { valid: false, error: 'Network passphrase does not match the configured network' };
+  }
+  try {
+    new URL(config.horizonUrl);
+  } catch {
+    return { valid: false, error: 'Horizon URL must be a valid URL' };
+  }
+  return { valid: true };
+}
+
+/** Idempotency keys are opaque, bounded identifiers—not request payloads. */
+export function validateIdempotencyKey(key: string | null | undefined): StampConfigValidation {
+  if (!key) return { valid: false, error: 'Idempotency-Key header is required' };
+  if (key.length < 8 || key.length > 128 || !/^[A-Za-z0-9._:-]+$/.test(key)) {
+    return { valid: false, error: 'Idempotency-Key must be 8-128 safe characters' };
+  }
+  return { valid: true };
+}
+
+export interface HorizonStampOperation {
+  type: string;
+  assetCode?: string;
+  assetIssuer?: string;
+  amount?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface HorizonStampProof {
+  hash: string;
+  successful: boolean;
+  ledger: number;
+  sourceAccount: string;
+  networkPassphrase: string;
+  operations: HorizonStampOperation[];
+}
+
+export interface StampProofExpectation {
+  operation: StampOperation;
+  amount: number;
+  assetCode: string;
+  assetIssuer: string;
+  networkPassphrase: string;
+  customerAddress: string;
+  sourceAccount: string;
+}
+
+function normalizeAmount(value: string | number | undefined): string | null {
+  if (value === undefined) return null;
+  const raw = String(value);
+  if (!/^\d+(?:\.\d+)?$/.test(raw)) return null;
+  const [whole, fraction = ''] = raw.split('.');
+  const normalizedFraction = fraction.replace(/0+$/, '');
+  return normalizedFraction ? `${whole}.${normalizedFraction}` : whole;
+}
+
+/**
+ * Validate the proof returned by our Horizon adapter. A client may suggest a
+ * signed XDR, but it cannot supply this proof or choose the hash persisted by
+ * the service.
+ */
+export function validateHorizonStampProof(
+  proof: HorizonStampProof | null,
+  expected: StampProofExpectation,
+): StampConfigValidation {
+  if (!proof) return { valid: false, error: 'Transaction was not found on Horizon' };
+  if (!proof.successful) return { valid: false, error: 'Horizon reports the transaction failed' };
+  if (!Number.isInteger(proof.ledger) || proof.ledger <= 0) {
+    return { valid: false, error: 'Horizon proof has no confirmed ledger' };
+  }
+  if (!/^[A-F0-9]{64}$/i.test(proof.hash)) {
+    return { valid: false, error: 'Horizon proof has an invalid transaction hash' };
+  }
+  if (proof.networkPassphrase !== expected.networkPassphrase) {
+    return { valid: false, error: 'Horizon proof is for a different Stellar network' };
+  }
+  if (proof.sourceAccount !== expected.sourceAccount) {
+    return { valid: false, error: 'Horizon proof has an unexpected transaction source' };
+  }
+
+  const expectedType = expected.operation === 'issue' ? 'payment' : 'clawback';
+  const expectedAmount = normalizeAmount(expected.amount);
+  const matchingOperation = proof.operations.some((operation) => {
+    if (operation.type !== expectedType) return false;
+    if (operation.assetCode !== expected.assetCode) return false;
+    if (operation.assetIssuer !== expected.assetIssuer) return false;
+    if (normalizeAmount(operation.amount) !== expectedAmount) return false;
+    return expected.operation === 'issue'
+      ? operation.to === expected.customerAddress
+      : operation.from === expected.customerAddress;
+  });
+
+  return matchingOperation
+    ? { valid: true }
+    : { valid: false, error: 'Horizon proof does not match the pending stamp intent' };
+}
+
 // Stellar testnet asset code max is 12 chars
 export function validateAssetCode(code: string): boolean {
   return /^[A-Z0-9]{1,12}$/.test(code);

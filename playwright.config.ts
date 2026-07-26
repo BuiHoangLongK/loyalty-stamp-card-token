@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const port = process.env.PORT ?? '3003';
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
@@ -9,7 +11,7 @@ export default defineConfig({
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${process.env.PORT ?? 3000}`,
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${port}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -18,20 +20,21 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop-chrome',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], browserName: 'chromium' },
     },
     {
       name: 'mobile-375',
       use: {
-        ...devices['iPhone 12'],
+        ...devices['Pixel 5'],
+        browserName: 'chromium',
         viewport: { width: 375, height: 812 },
       },
     },
   ],
 
   webServer: {
-    command: 'pnpm run dev',
-    url: `http://localhost:${process.env.PORT ?? 3003}`,
+    command: 'npm run dev',
+    url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 90_000,
   },

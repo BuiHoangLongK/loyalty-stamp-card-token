@@ -7,15 +7,25 @@ import { toast } from 'sonner';
 import { Button } from '@/ui/components/ui/button';
 import { apiGet, apiPost } from '@/ui/lib/api';
 import { StampCardVisual } from './stamp-card-visual';
+import { DEMO_MERCHANT, getDemoCustomer, getDemoCustomerEvents } from './demo-data';
 import type { Customer, Merchant, StampEvent } from './types';
 
 export function StampCustomer({ customerId }: { customerId: string }) {
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [merchant, setMerchant] = useState<Merchant | null>(null);
-  const [events, setEvents] = useState<StampEvent[]>([]);
+  const demoCustomer = getDemoCustomer(customerId);
+  const [customer, setCustomer] = useState<Customer | null>(demoCustomer ?? null);
+  const [merchant, setMerchant] = useState<Merchant | null>(demoCustomer ? DEMO_MERCHANT : null);
+  const [events, setEvents] = useState<StampEvent[]>(
+    demoCustomer ? getDemoCustomerEvents(customerId) : [],
+  );
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
+    if (demoCustomer) {
+      setCustomer(demoCustomer);
+      setMerchant(DEMO_MERCHANT);
+      setEvents(getDemoCustomerEvents(customerId));
+      return;
+    }
     const c = await apiGet<Customer>(`/api/stamps/customers/${customerId}`);
     setCustomer(c);
     const [m, evs] = await Promise.all([
@@ -24,7 +34,7 @@ export function StampCustomer({ customerId }: { customerId: string }) {
     ]);
     setMerchant(m);
     setEvents(evs);
-  }, [customerId]);
+  }, [customerId, demoCustomer]);
 
   useEffect(() => {
     load().catch(() => toast.error('Customer not found'));
@@ -37,6 +47,15 @@ export function StampCustomer({ customerId }: { customerId: string }) {
     if (!merchant || !customer) return;
     setBusy(true);
     try {
+      if (customer.id.startsWith('demo-')) {
+        setCustomer({
+          ...customer,
+          stampCount: 0,
+          totalRedeemed: customer.totalRedeemed + total,
+        });
+        toast.success('Demo reward redeemed — stamps clawed back locally.');
+        return;
+      }
       await apiPost(`/api/stamps/customers/${customer.id}/redeem`, { merchantId: merchant.id });
       toast.success('Reward redeemed! Stamps clawed back on Stellar.');
       await load();

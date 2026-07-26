@@ -2,6 +2,12 @@
 
 A batteries-included Next.js starter for the Stellar hackathon. TypeScript, Tailwind v4, shadcn/ui, Drizzle ORM, Freighter wallet auth, and `next-intl` (en + vi).
 
+## Public hackathon demo
+
+This StampChain demo runs with `DEMO_MODE=true` by default and includes Hoa's Coffee, three customers, seeded stamp history, SEP-7 QR preview, and a merchant dashboard. It is designed for a quick Vercel walkthrough without PostgreSQL, wallet extensions, private keys, or real mainnet funds. Stamp issue and clawback actions are simulated in memory; production settlement keeps the external-wallet intent flow.
+
+Reference screenshots are included in [`screen-shot/`](screen-shot/).
+
 ## Prerequisites
 
 - Node.js 20+ and npm 10+
@@ -25,7 +31,11 @@ npm run db:push:ci
 npm run dev
 ```
 
-Open http://localhost:3000. The default locale is `en`; visit `/vi` for Vietnamese.
+Open http://localhost:3003. The default locale is `en`; visit `/vi` for Vietnamese.
+
+The StampChain landing page, merchant dashboard, and customer card include a local demo
+fixture as a fallback. Seeded PostgreSQL data is used when available, but the main
+walkthrough remains viewable without a database or wallet connection.
 
 ## Stack
 
@@ -47,6 +57,8 @@ Open http://localhost:3000. The default locale is `en`; visit `/vi` for Vietname
 | `npm run start` | Run production server |
 | `npm test` | Run unit tests (`test` is one of npm's built-in shorthand script names) |
 | `npm run test:watch` | Vitest watch mode |
+| `npm run test:e2e` | Playwright E2E tests |
+| `npm run test:e2e:chromium` | Playwright E2E tests in desktop and mobile Chromium |
 | `npm run lint` | Biome check |
 | `npm run lint:fix` | Biome auto-fix |
 | `npm run format` | Biome format |
@@ -111,6 +123,10 @@ Default locale is `en`. Visit `/vi` for Vietnamese. Add a new locale:
 - **Reference domain:** delete `wallets` table + related files to start fresh.
 
 ## Deploy
+
+### Stamp settlement boundary
+
+In normal mode, a stamp action creates a pending intent. `POST /api/stamps/intents/:id/prepare` builds an unsigned payment or clawback envelope from Horizon account and fee data. An external wallet signs it; confirmation accepts only the matching signed XDR after Horizon proves the exact operation. The application never signs or broadcasts.
 
 1. Push to GitHub and import into your platform of choice (Vercel works out of the box).
 2. Provision a Postgres database (Neon, Supabase, or Vercel Postgres all work). Copy the

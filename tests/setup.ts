@@ -22,6 +22,9 @@ process.env.SESSION_SECRET ??= 'test-session-secret-at-least-32-characters-long'
 process.env.STELLAR_NETWORK ??= 'testnet';
 process.env.STELLAR_HORIZON_URL ??= 'https://horizon-testnet.stellar.org';
 process.env.STELLAR_NETWORK_PASSPHRASE ??= 'Test SDF Network ; September 2015';
+// Business-logic tests exercise the explicitly isolated demo path. Production
+// and public-network processes must set DEMO_MODE=false.
+process.env.DEMO_MODE ??= 'true';
 
 // jsdom does not implement window.matchMedia. Several of our hooks (PWA
 // install prompt, next-themes via class strategy, etc.) need it. Provide

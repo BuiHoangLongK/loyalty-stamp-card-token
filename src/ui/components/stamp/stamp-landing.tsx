@@ -1,11 +1,17 @@
 'use client';
 
 import { Coffee, QrCode, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { Link } from '@/i18n/routing';
 import { useEffect, useState } from 'react';
 import { QrImage } from '@/ui/components/shared/qr-image';
 import { Button } from '@/ui/components/ui/button';
 import { apiGet } from '@/ui/lib/api';
 import { StampCardVisual } from './stamp-card-visual';
+import {
+  DEMO_CUSTOMERS,
+  DEMO_EVENTS,
+  DEMO_MERCHANT,
+} from './demo-data';
 import type { Customer, Merchant, StampEvent } from './types';
 
 const FEATURE_BADGES = [
@@ -15,9 +21,9 @@ const FEATURE_BADGES = [
 ];
 
 export function StampLanding() {
-  const [merchant, setMerchant] = useState<Merchant | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [events, setEvents] = useState<StampEvent[]>([]);
+  const [merchant, setMerchant] = useState<Merchant | null>(DEMO_MERCHANT);
+  const [customers, setCustomers] = useState<Customer[]>(DEMO_CUSTOMERS);
+  const [events, setEvents] = useState<StampEvent[]>(DEMO_EVENTS);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +41,8 @@ export function StampLanding() {
         setCustomers(cs);
         setEvents(evs);
       } catch {
-        // demo resilience: leave empty
+        // The UI starts with the local demo fixture, so a missing database does
+        // not interrupt the landing-page walkthrough.
       }
     })();
     return () => {
@@ -85,11 +92,11 @@ export function StampLanding() {
 
         <div className="mt-8 flex gap-3">
           <Button asChild className="bg-violet-600 hover:bg-violet-700">
-            <a href="/dashboard">Open Merchant Dashboard</a>
+            <Link href="/dashboard">Open Merchant Dashboard</Link>
           </Button>
           {featured ? (
             <Button asChild variant="outline">
-              <a href={`/stamp/${featured.id}`}>View a customer card</a>
+              <Link href={`/stamp/${featured.id}`}>View a customer card</Link>
             </Button>
           ) : null}
         </div>

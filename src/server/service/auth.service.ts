@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import {
   Account,
   BASE_FEE,
@@ -13,6 +13,7 @@ import { stellar } from '@/server/config/stellar';
 import { db } from '@/server/db/client';
 import { authNonces, sessions } from '@/server/db/schema';
 import { AppError } from '@/server/lib/http';
+import { getDemoStore } from '@/server/service/demo.store';
 
 function randomNonce(): string {
   return randomBytes(24).toString('base64url');
@@ -40,7 +41,12 @@ export const authService = {
       .setTimeout(env.NONCE_TTL_SECONDS)
       .build();
 
-    await db.insert(authNonces).values({ nonce, publicKey, expiresAt });
+    if (env.DEMO_MODE) {
+      getDemoStore().saveNonce(nonce, { publicKey, expiresAt, consumed: false });
+    } else {
+      if (!db) throw new AppError('INTERNAL', 'Database is not configured', 500);
+      await db.insert(authNonces).values({ nonce, publicKey, expiresAt });
+    }
     return { nonce, txXdr: tx.toXDR(), expiresAt };
   },
 
@@ -85,6 +91,19 @@ export const authService = {
 
     // Look up the nonce and confirm it is unconsumed and unexpired.
     const now = new Date();
+    if (env.DEMO_MODE) {
+      if (!getDemoStore().consumeNonce(nonce, publicKey)) {
+        throw new AppError('UNAUTHORIZED', 'Nonce not found or expired', 401);
+      }
+      const sessionId = randomUUID();
+      getDemoStore().saveSession(sessionId, {
+        publicKey,
+        expiresAt: new Date(Date.now() + env.SESSION_TTL_SECONDS * 1000),
+      });
+      return { sessionId };
+    }
+
+    if (!db) throw new AppError('INTERNAL', 'Database is not configured', 500);
     const [matched] = await db
       .select()
       .from(authNonces)
@@ -95,7 +114,7 @@ export const authService = {
           isNull(authNonces.consumedAt),
           gt(authNonces.expiresAt, now),
         ),
-      );
+      ) ?? [];
 
     if (!matched) {
       throw new AppError('UNAUTHORIZED', 'Nonce not found or expired', 401);
@@ -111,10 +130,15 @@ export const authService = {
       .insert(sessions)
       .values({ publicKey, expiresAt })
       .returning({ id: sessions.id });
+    if (!session) throw new AppError('INTERNAL', 'Unable to create session', 500);
     return { sessionId: session.id };
   },
 
   async destroySession(sessionId: string): Promise<void> {
-    await db.delete(sessions).where(eq(sessions.id, sessionId));
+    if (env.DEMO_MODE) {
+      getDemoStore().deleteSession(sessionId);
+    } else {
+      await db?.delete(sessions).where(eq(sessions.id, sessionId));
+    }
   },
 };

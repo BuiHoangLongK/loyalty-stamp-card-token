@@ -14,6 +14,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:chromium": "playwright test --project=desktop-chrome --project=mobile-375",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:all": "npm test && npm run test:e2e",
@@ -24,7 +25,7 @@
     "db:studio": "drizzle-kit studio",
     "smoke": "tsx scripts/smoke.ts",
     "seed": "dotenv -e .env.local -- tsx scripts/seed-demo.ts",
-    "demo": "pnpm run db:push && pnpm run seed && pnpm run dev"
+    "demo": "npm run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

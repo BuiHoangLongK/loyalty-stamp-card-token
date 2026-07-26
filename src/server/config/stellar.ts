@@ -1,4 +1,5 @@
 import { Horizon, Networks } from '@stellar/stellar-sdk';
+import { STELLAR_NETWORK_PASSPHRASES } from '@/server/lib/stamp';
 import { env } from './env';
 
 const networkMap = {
@@ -18,9 +19,13 @@ const networkMap = {
 
 const cfg = networkMap[env.STELLAR_NETWORK];
 
+if (env.STELLAR_NETWORK_PASSPHRASE !== STELLAR_NETWORK_PASSPHRASES[env.STELLAR_NETWORK]) {
+  throw new Error('STELLAR_NETWORK_PASSPHRASE does not match STELLAR_NETWORK');
+}
+
 export const stellar = {
   passphrase: cfg.passphrase,
-  horizonUrl: cfg.horizonUrl,
+  horizonUrl: env.STELLAR_HORIZON_URL,
   network: env.STELLAR_NETWORK,
-  server: new Horizon.Server(cfg.horizonUrl),
+  server: new Horizon.Server(env.STELLAR_HORIZON_URL),
 } as const;

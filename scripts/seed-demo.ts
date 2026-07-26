@@ -4,6 +4,10 @@ import { Pool } from 'pg';
 import * as schema from '../src/server/db/schema';
 import { customers, merchants, redemptions, stampEvents } from '../src/server/db/schema';
 
+if (process.env.DEMO_MODE !== 'true' || process.env.STELLAR_NETWORK === 'public') {
+  throw new Error('seed-demo requires DEMO_MODE=true and a non-mainnet STELLAR_NETWORK');
+}
+
 const pool = new Pool({ connectionString: process.env.DRIZZLE_DATABASE_URL });
 const db = drizzle(pool, { schema });
 

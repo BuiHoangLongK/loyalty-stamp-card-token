@@ -41,5 +41,14 @@
     "totalLocked": "Total Locked",
     "activeLocks": "Active Locks",
     "claimable": "Claimable"
+  },
+  "PWA": {
+    "installTitle": "Install StampChain",
+    "installDescription": "Add StampChain to your home screen for a faster loyalty experience.",
+    "installButton": "Install",
+    "dismissButton": "Later",
+    "offlineTitle": "You are offline",
+    "offlineDescription": "We cannot reach the network. Check your connection and try again.",
+    "retryButton": "Try again"
   }
 }

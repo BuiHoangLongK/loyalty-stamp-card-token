@@ -13,7 +13,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const { id } = await params;
     const body = schema.parse(await req.json());
     const svc = new StampService(db);
-    const data = await svc.issueStamp(id, body.merchantId, body.amount);
+    const data = await svc.issueStamp(
+      id,
+      body.merchantId,
+      body.amount,
+      req.headers.get('Idempotency-Key'),
+    );
     return ok(data, { status: 201 });
   } catch (err) {
     return fromError(err);

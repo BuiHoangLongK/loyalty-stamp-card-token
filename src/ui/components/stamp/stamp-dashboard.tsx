@@ -5,12 +5,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/ui/components/ui/button';
 import { apiGet, apiPost } from '@/ui/lib/api';
+import { DEMO_CUSTOMERS, DEMO_MERCHANT, DEMO_STATS } from './demo-data';
 import type { Customer, Merchant, MerchantStats } from './types';
 
 export function StampDashboard() {
-  const [merchant, setMerchant] = useState<Merchant | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [stats, setStats] = useState<MerchantStats | null>(null);
+  const [merchant, setMerchant] = useState<Merchant | null>(DEMO_MERCHANT);
+  const [customers, setCustomers] = useState<Customer[]>(DEMO_CUSTOMERS);
+  const [stats, setStats] = useState<MerchantStats | null>(DEMO_STATS);
+  const [isDemo, setIsDemo] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -24,16 +26,31 @@ export function StampDashboard() {
     ]);
     setCustomers(cs);
     setStats(st);
+    setIsDemo(false);
   }, []);
 
   useEffect(() => {
-    load().catch(() => toast.error('Failed to load demo data — run pnpm run seed'));
+    load().catch(() => setIsDemo(true));
   }, [load]);
 
   const issue = async (customerId: string) => {
     if (!merchant) return;
     setBusy(customerId);
     try {
+      if (customerId.startsWith('demo-')) {
+        setCustomers((current) =>
+          current.map((customer) => {
+            if (customer.id !== customerId) return customer;
+            return {
+              ...customer,
+              stampCount: Math.min(customer.stampCount + 1, total),
+            };
+          }),
+        );
+        setStats((current) => (current ? { ...current, totalStampsIssued: current.totalStampsIssued + 1 } : current));
+        toast.success('Demo stamp added — ready for the next walkthrough step');
+        return;
+      }
       await apiPost(`/api/stamps/customers/${customerId}/issue`, { merchantId: merchant.id });
       toast.success('Stamp issued on-chain (mint to trustline)');
       await load();
@@ -48,6 +65,30 @@ export function StampDashboard() {
     if (!merchant) return;
     setBusy(customerId);
     try {
+      if (customerId.startsWith('demo-')) {
+        setCustomers((current) =>
+          current.map((customer) =>
+            customer.id === customerId
+              ? {
+                  ...customer,
+                  stampCount: 0,
+                  totalRedeemed: customer.totalRedeemed + total,
+                }
+              : customer,
+          ),
+        );
+        setStats((current) =>
+          current
+            ? {
+                ...current,
+                readyToRedeem: Math.max(0, current.readyToRedeem - 1),
+                totalRedemptions: current.totalRedemptions + 1,
+              }
+            : current,
+        );
+        toast.success('Demo reward redeemed — stamps clawed back locally');
+        return;
+      }
       await apiPost(`/api/stamps/customers/${customerId}/redeem`, { merchantId: merchant.id });
       toast.success('Reward redeemed via AUTH_CLAWBACK — stamps clawed back');
       await load();
@@ -67,6 +108,11 @@ export function StampDashboard() {
         <p className="font-body text-muted-foreground">
           {merchant?.name ?? "Hoa's Coffee — Hanoi"} · issue stamps and redeem rewards on Stellar
         </p>
+        {isDemo ? (
+          <p className="mt-2 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+            Demo preview · no wallet or database required
+          </p>
+        ) : null}
       </header>
 
       {/* Stats */}
@@ -85,9 +131,9 @@ export function StampDashboard() {
       {/* Customer list */}
       <div
         data-testid="customer-list"
-        className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm"
+        className="overflow-x-auto rounded-2xl border border-border bg-white shadow-sm"
       >
-        <table className="w-full text-sm">
+        <table className="min-w-[680px] w-full text-sm">
           <thead className="bg-violet-50 text-left font-sans text-xs uppercase tracking-wide text-violet-700">
             <tr>
               <th className="px-4 py-3">Customer</th>
@@ -126,7 +172,7 @@ export function StampDashboard() {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={busy === c.id}
+                        disabled={busy === c.id || c.stampCount >= total}
                         onClick={() => issue(c.id)}
                       >
                         + Stamp

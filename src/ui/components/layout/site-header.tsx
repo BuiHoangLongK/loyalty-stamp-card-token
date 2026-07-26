@@ -1,7 +1,7 @@
 'use client';
 
 import { Stamp } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { ThemeToggle } from '@/ui/components/shared/theme-toggle';
 
 export function SiteHeader() {

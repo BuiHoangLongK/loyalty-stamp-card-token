@@ -7,16 +7,19 @@ const globalForDb = globalThis as unknown as {
   pgPool: Pool | undefined;
 };
 
-const pool =
-  globalForDb.pgPool ??
-  new Pool({
-    connectionString: env.DRIZZLE_DATABASE_URL,
-    max: 10,
-  });
+// Do not even construct a pg pool in demo mode. This lets Vercel render the
+// seeded demo without a PostgreSQL connection string or a reachable database.
+const pool = env.DEMO_MODE
+  ? undefined
+  : globalForDb.pgPool ??
+    new Pool({
+      connectionString: env.DRIZZLE_DATABASE_URL,
+      max: 10,
+    });
 
-if (env.NODE_ENV !== 'production') {
+if (pool && env.NODE_ENV !== 'production') {
   globalForDb.pgPool = pool;
 }
 
-export const db = drizzle(pool, { schema });
-export type Database = typeof db;
+export const db = pool ? drizzle(pool, { schema }) : undefined;
+export type Database = NonNullable<typeof db>;
