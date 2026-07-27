@@ -1,0 +1,9 @@
+{
+  "network": "testnet",
+  "status": "not_deployed",
+  "contract_id": null,
+  "wasm_hash": "9818d1c515c96ea58d827aa4447c02d4baf2237d868e236601ad67569396b859",
+  "deployment_transaction": null,
+  "admin": null,
+  "notes": "Local Soroban stamp registry only. Record real deployment evidence after wallet-signed Testnet transactions."
+}
