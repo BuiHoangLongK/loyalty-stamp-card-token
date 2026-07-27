@@ -1,9 +1,17 @@
 {
-  "network": "testnet",
-  "status": "not_deployed",
-  "contract_id": null,
-  "wasm_hash": "9818d1c515c96ea58d827aa4447c02d4baf2237d868e236601ad67569396b859",
-  "deployment_transaction": null,
-  "admin": null,
-  "notes": "Local Soroban stamp registry only. Record real deployment evidence after wallet-signed Testnet transactions."
+  "network": "mainnet",
+  "status": "live",
+  "contract_id": "CABAYBURYKWLN5ZRR3CZHFO5HT5P72HH7RJJAFDSDL3A5KTARFYEUNGU",
+  "wasm_hash": "c1e45d27707c8450590e19e7e6008f542dd1debd18c3e1aacf4fff3119b1a32a",
+  "upload_transaction": "93dc8c18cec9763ea83e83c7eeb08273c5e2ca7387e258b1ee43f75e6709ff2a",
+  "deployment_transaction": "dd7c35e1a9e8d63cb7122d15df7f8811e9f8529f4db28c86b847a8b242c51325",
+  "initialization_transaction": "b6edc59344588f0324ae75a03ee6af64b5c65fc2257de9d84256c9dbb77e5698",
+  "functional_transactions": {
+    "issue_stamp_1": "787aa70095475c6d8ec4b852a07dfbf8d72a75c6bf0313446dfcc018262f5ac2",
+    "issue_stamp_2": "214ab27ed1b1819c9cf1c1975ae12b5663bddbd7a772a26ead2ba07313a74aa5",
+    "redeem": "11ec9b86a4c59be0c2892165be0dcffb7a979ec8ab40bf1999abb443cadefb80"
+  },
+  "admin": "GD3RGSAERNRC52CQFAUVSE7PZWACGP7W522MSWAYZQQMYAVI2Q5Z6SB6",
+  "rpc_url": "https://mainnet.sorobanrpc.com",
+  "notes": "Mainnet deployment and functional flow verified: initialize, issue two stamps, then redeem both."
 }
