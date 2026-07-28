@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Button } from '@/ui/components/ui/button';
 import { apiGet, apiPost } from '@/ui/lib/api';
 import { DEMO_CUSTOMERS, DEMO_MERCHANT, DEMO_STATS } from './demo-data';
+import { MainnetRedeemAction } from './mainnet-redeem-action';
 import type { Customer, Merchant, MerchantStats } from './types';
 
 export function StampDashboard() {
@@ -47,7 +48,9 @@ export function StampDashboard() {
             };
           }),
         );
-        setStats((current) => (current ? { ...current, totalStampsIssued: current.totalStampsIssued + 1 } : current));
+        setStats((current) =>
+          current ? { ...current, totalStampsIssued: current.totalStampsIssued + 1 } : current,
+        );
         toast.success('Demo stamp added — ready for the next walkthrough step');
         return;
       }
@@ -114,6 +117,8 @@ export function StampDashboard() {
           </p>
         ) : null}
       </header>
+
+      <MainnetRedeemAction />
 
       {/* Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-4">

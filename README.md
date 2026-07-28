@@ -8,6 +8,10 @@ This StampChain demo runs with `DEMO_MODE=true` by default and includes Hoa's Co
 
 Reference screenshots are included in [`screen-shot/`](screen-shot/).
 
+## Verified production deployment
+
+[https://031-loyalty-stamp-card-token-jndfo1a1p-b18558349-1360s-projects.vercel.app](https://031-loyalty-stamp-card-token-jndfo1a1p-b18558349-1360s-projects.vercel.app) — verified HTTP 200 after production deployment.
+
 ## Prerequisites
 
 - Node.js 20+ and npm 10+
