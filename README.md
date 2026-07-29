@@ -1,4 +1,4 @@
-# Stellar Starter
+# StampChain — Loyalty Stamp Card on Stellar
 
 A batteries-included Next.js starter for the Stellar hackathon. TypeScript, Tailwind v4, shadcn/ui, Drizzle ORM, Freighter wallet auth, and `next-intl` (en + vi).
 
@@ -11,6 +11,15 @@ Reference screenshots are included in [`screen-shot/`](screen-shot/).
 ## Verified production deployment
 
 [https://031-loyalty-stamp-card-token-jndfo1a1p-b18558349-1360s-projects.vercel.app](https://031-loyalty-stamp-card-token-jndfo1a1p-b18558349-1360s-projects.vercel.app) — verified HTTP 200 after production deployment.
+
+## Verified Stellar Mainnet evidence
+
+- Contract: [`CABAYBURYKWLN5ZRR3CZHFO5HT5P72HH7RJJAFDSDL3A5KTARFYEUNGU`](https://stellar.expert/explorer/public/contract/CABAYBURYKWLN5ZRR3CZHFO5HT5P72HH7RJJAFDSDL3A5KTARFYEUNGU)
+- Latest functional call (`redeem`): [`11ec9b86a4c59be0c2892165be0dcffb7a979ec8ab40bf1999abb443cadefb80`](https://stellar.expert/explorer/public/tx/11ec9b86a4c59be0c2892165be0dcffb7a979ec8ab40bf1999abb443cadefb80)
+- Full deployment manifest: [`contracts/stamp-card/deployment.json`](contracts/stamp-card/deployment.json)
+
+The verified flow is `initialize → issue_stamp → issue_stamp → redeem`. Wallets
+sign their own transactions; the application does not store private keys.
 
 ## Prerequisites
 
