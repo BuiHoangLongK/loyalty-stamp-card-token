@@ -84,7 +84,7 @@ export const authService = {
     const op = tx.operations.find((o) => o.type === 'manageData') as
       | { type: 'manageData'; name: string; value: Buffer | null }
       | undefined;
-    if (!op || op.name !== 'auth_nonce' || !op.value) {
+    if (op?.name !== 'auth_nonce' || !op.value) {
       throw new AppError('UNAUTHORIZED', 'Challenge operation not found in transaction', 401);
     }
     const nonce = op.value.toString('utf8');

@@ -2,7 +2,7 @@ import { StrKey } from '@stellar/stellar-sdk';
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { clearSessionCookie, readSessionCookie, setSessionCookie } from '@/server/lib/cookies';
-import { AppError, ok } from '@/server/lib/http';
+import { ok } from '@/server/lib/http';
 import { authService } from '@/server/service/auth.service';
 
 const publicKeySchema = z

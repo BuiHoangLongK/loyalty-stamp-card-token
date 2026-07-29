@@ -16,14 +16,13 @@ export type HandlerContext = {
 
 export type Middleware = (handler: RouteHandler) => RouteHandler;
 
-// Returns a Next.js-compatible handler using 'any' cast for ctx to avoid
-// strict type mismatch with Next.js 16's AppRouteHandlerFnContext validation.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Returns a Next.js-compatible handler while keeping the framework context
+// opaque until it crosses into the application's typed handler boundary.
 export function compose(...middlewares: Middleware[]) {
   return (
     handler: RouteHandler,
-  ): ((req: NextRequest, ctx: any) => Promise<Response> | Response) => {
+  ): ((req: NextRequest, ctx: unknown) => Promise<Response> | Response) => {
     const composed = middlewares.reduceRight((acc, mw) => mw(acc), handler);
-    return (req: NextRequest, ctx: any) => composed(req, ctx as HandlerContext);
+    return (req: NextRequest, ctx: unknown) => composed(req, ctx as HandlerContext);
   };
 }
