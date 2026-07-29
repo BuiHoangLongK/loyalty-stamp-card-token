@@ -1,17 +1,13 @@
 'use client';
 
 import { Coffee, QrCode, ShieldCheck, Sparkles, Zap } from 'lucide-react';
-import { Link } from '@/i18n/routing';
 import { useEffect, useState } from 'react';
+import { Link } from '@/i18n/routing';
 import { QrImage } from '@/ui/components/shared/qr-image';
 import { Button } from '@/ui/components/ui/button';
 import { apiGet } from '@/ui/lib/api';
+import { DEMO_CUSTOMERS, DEMO_EVENTS, DEMO_MERCHANT } from './demo-data';
 import { StampCardVisual } from './stamp-card-visual';
-import {
-  DEMO_CUSTOMERS,
-  DEMO_EVENTS,
-  DEMO_MERCHANT,
-} from './demo-data';
 import type { Customer, Merchant, StampEvent } from './types';
 
 const FEATURE_BADGES = [

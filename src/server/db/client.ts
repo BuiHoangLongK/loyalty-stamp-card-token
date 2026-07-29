@@ -11,11 +11,11 @@ const globalForDb = globalThis as unknown as {
 // seeded demo without a PostgreSQL connection string or a reachable database.
 const pool = env.DEMO_MODE
   ? undefined
-  : globalForDb.pgPool ??
+  : (globalForDb.pgPool ??
     new Pool({
       connectionString: env.DRIZZLE_DATABASE_URL,
       max: 10,
-    });
+    }));
 
 if (pool && env.NODE_ENV !== 'production') {
   globalForDb.pgPool = pool;

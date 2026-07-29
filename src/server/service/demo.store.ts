@@ -80,11 +80,15 @@ function createSeed(): DemoStoreState {
   let index = 1;
 
   for (let i = 0; i < 8; i += 1) {
-    events.push(makeEvent(customerIds.minh, 'issued', 1, index, new Date(Date.now() - index * 60_000)));
+    events.push(
+      makeEvent(customerIds.minh, 'issued', 1, index, new Date(Date.now() - index * 60_000)),
+    );
     index += 1;
   }
   for (let i = 0; i < 10; i += 1) {
-    events.push(makeEvent(customerIds.linh, 'issued', 1, index, new Date(Date.now() - index * 60_000)));
+    events.push(
+      makeEvent(customerIds.linh, 'issued', 1, index, new Date(Date.now() - index * 60_000)),
+    );
     index += 1;
   }
   events.push(
@@ -92,11 +96,15 @@ function createSeed(): DemoStoreState {
   );
   index += 1;
   for (let i = 0; i < 10; i += 1) {
-    events.push(makeEvent(customerIds.linh, 'issued', 1, index, new Date(Date.now() - index * 60_000)));
+    events.push(
+      makeEvent(customerIds.linh, 'issued', 1, index, new Date(Date.now() - index * 60_000)),
+    );
     index += 1;
   }
   for (let i = 0; i < 3; i += 1) {
-    events.push(makeEvent(customerIds.hung, 'issued', 1, index, new Date(Date.now() - index * 60_000)));
+    events.push(
+      makeEvent(customerIds.hung, 'issued', 1, index, new Date(Date.now() - index * 60_000)),
+    );
     index += 1;
   }
 
@@ -224,7 +232,12 @@ export class DemoStore {
 
   consumeNonce(nonce: string, publicKey: string): boolean {
     const value = this.state.nonces.get(nonce);
-    if (!value || value.consumed || value.publicKey !== publicKey || value.expiresAt <= new Date()) {
+    if (
+      !value ||
+      value.consumed ||
+      value.publicKey !== publicKey ||
+      value.expiresAt <= new Date()
+    ) {
       return false;
     }
     value.consumed = true;

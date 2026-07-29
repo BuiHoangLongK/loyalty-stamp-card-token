@@ -104,17 +104,18 @@ export const authService = {
     }
 
     if (!db) throw new AppError('INTERNAL', 'Database is not configured', 500);
-    const [matched] = await db
-      .select()
-      .from(authNonces)
-      .where(
-        and(
-          eq(authNonces.publicKey, publicKey),
-          eq(authNonces.nonce, nonce),
-          isNull(authNonces.consumedAt),
-          gt(authNonces.expiresAt, now),
-        ),
-      ) ?? [];
+    const [matched] =
+      (await db
+        .select()
+        .from(authNonces)
+        .where(
+          and(
+            eq(authNonces.publicKey, publicKey),
+            eq(authNonces.nonce, nonce),
+            isNull(authNonces.consumedAt),
+            gt(authNonces.expiresAt, now),
+          ),
+        )) ?? [];
 
     if (!matched) {
       throw new AppError('UNAUTHORIZED', 'Nonce not found or expired', 401);

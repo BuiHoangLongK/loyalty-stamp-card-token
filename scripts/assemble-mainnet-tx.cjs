@@ -44,14 +44,27 @@ function address(value) {
 async function main() {
   const stage = option('stage');
   const contract = option('contract-id');
-  const allowed = ['upload', 'deploy', 'initialize', 'issue-stamp-1', 'issue-stamp-2', 'redeem', 'clawback-1'];
+  const allowed = [
+    'upload',
+    'deploy',
+    'initialize',
+    'issue-stamp-1',
+    'issue-stamp-2',
+    'redeem',
+    'clawback-1',
+  ];
   if (!allowed.includes(stage)) {
-    throw new Error(`Usage: node scripts/assemble-mainnet-tx.cjs --stage ${allowed.join('|')} [--contract-id C...]`);
+    throw new Error(
+      `Usage: node scripts/assemble-mainnet-tx.cjs --stage ${allowed.join('|')} [--contract-id C...]`,
+    );
   }
 
   const server = new rpc.Server(RPC_URL);
   const account = await server.getAccount(SOURCE);
-  const builder = new TransactionBuilder(account, { fee: '100', networkPassphrase: Networks.PUBLIC });
+  const builder = new TransactionBuilder(account, {
+    fee: '100',
+    networkPassphrase: Networks.PUBLIC,
+  });
 
   if (stage === 'upload') {
     builder.addOperation(Operation.uploadContractWasm({ wasm: fs.readFileSync(WASM_PATH) }));

@@ -1,13 +1,10 @@
 import { z } from 'zod';
 
-const booleanEnv = z.preprocess(
-  (value) => {
-    if (value === undefined) return true;
-    if (typeof value === 'string') return value === 'true' || value === '1';
-    return value;
-  },
-  z.boolean(),
-);
+const booleanEnv = z.preprocess((value) => {
+  if (value === undefined) return true;
+  if (typeof value === 'string') return value === 'true' || value === '1';
+  return value;
+}, z.boolean());
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

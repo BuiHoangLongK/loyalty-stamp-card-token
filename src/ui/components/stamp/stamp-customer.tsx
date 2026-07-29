@@ -6,8 +6,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/ui/components/ui/button';
 import { apiGet, apiPost } from '@/ui/lib/api';
-import { StampCardVisual } from './stamp-card-visual';
 import { DEMO_MERCHANT, getDemoCustomer, getDemoCustomerEvents } from './demo-data';
+import { StampCardVisual } from './stamp-card-visual';
 import type { Customer, Merchant, StampEvent } from './types';
 
 export function StampCustomer({ customerId }: { customerId: string }) {

@@ -1,28 +1,28 @@
 import { createHash } from 'node:crypto';
-import { and, desc, eq, gte, isNull } from 'drizzle-orm';
 import { Asset, Operation, StrKey, TransactionBuilder } from '@stellar/stellar-sdk';
+import { and, desc, eq, gte, isNull } from 'drizzle-orm';
+import { env } from '@/server/config/env';
+import { stellar } from '@/server/config/stellar';
 import type { Database } from '@/server/db/client';
 import {
   customers,
   merchants,
   redemptions,
+  type StampTransactionIntent,
   stampEvents,
   stampTransactionIntents,
-  type StampTransactionIntent,
 } from '@/server/db/schema';
-import { env } from '@/server/config/env';
-import { stellar } from '@/server/config/stellar';
 import { AppError } from '@/server/lib/http';
-import { getDemoStore, type DemoStore } from '@/server/service/demo.store';
 import {
-  mockTxHash,
   type HorizonStampOperation,
   type HorizonStampProof,
+  mockTxHash,
   type StampOperation,
   validateHorizonStampProof,
   validateIdempotencyKey,
   validateStampAssetConfig,
 } from '@/server/lib/stamp';
+import { type DemoStore, getDemoStore } from '@/server/service/demo.store';
 
 export interface StampHorizonProofProvider {
   get(txHash: string): Promise<HorizonStampProof | null>;
@@ -180,9 +180,16 @@ export class StampService {
       if (!customer) throw new AppError('NOT_FOUND', 'Customer not found', 404);
       const merchant = this.demoStore.getMerchant(merchantId);
       if (!merchant) throw new AppError('NOT_FOUND', 'Merchant not found', 404);
-      const relationshipValidation = this.validateMerchantRelationship(customer.merchantId, merchant.id);
+      const relationshipValidation = this.validateMerchantRelationship(
+        customer.merchantId,
+        merchant.id,
+      );
       if (!relationshipValidation.valid) {
-        throw new AppError('INVALID_INPUT', relationshipValidation.error ?? 'Invalid merchant', 400);
+        throw new AppError(
+          'INVALID_INPUT',
+          relationshipValidation.error ?? 'Invalid merchant',
+          400,
+        );
       }
       if (amount <= 0 || !Number.isInteger(amount)) {
         throw new AppError('INVALID_INPUT', 'Stamp amount must be a positive integer', 400);
@@ -191,7 +198,10 @@ export class StampService {
       if (!event) throw new AppError('NOT_FOUND', 'Customer not found', 404);
       return { status: 'confirmed', mode: 'demo', event, txHash: event.txHash };
     }
-    const [customer] = await this.requireDb().select().from(customers).where(eq(customers.id, customerId));
+    const [customer] = await this.requireDb()
+      .select()
+      .from(customers)
+      .where(eq(customers.id, customerId));
     if (!customer) throw new AppError('NOT_FOUND', 'Customer not found', 404);
 
     if (env.NODE_ENV === 'test' && !idempotencyKey) {
@@ -223,7 +233,8 @@ export class StampService {
       const merchant = this.demoStore.getMerchant(merchantId);
       if (!merchant) throw new AppError('NOT_FOUND', 'Merchant not found', 404);
       const validation = this.validateMerchantRelationship(customer.merchantId, merchant.id);
-      if (!validation.valid) throw new AppError('INVALID_INPUT', validation.error ?? 'Invalid merchant', 400);
+      if (!validation.valid)
+        throw new AppError('INVALID_INPUT', validation.error ?? 'Invalid merchant', 400);
       const clawbackValidation = this.validateRedeemAmount(
         customer.stampCount,
         merchant.stampsToReward,
@@ -236,17 +247,24 @@ export class StampService {
       if (!result) throw new AppError('NOT_FOUND', 'Customer not found', 404);
       return { status: 'confirmed', mode: 'demo', ...result };
     }
-    const [customer] = await this.requireDb().select().from(customers).where(eq(customers.id, customerId));
+    const [customer] = await this.requireDb()
+      .select()
+      .from(customers)
+      .where(eq(customers.id, customerId));
     if (!customer) throw new AppError('NOT_FOUND', 'Customer not found', 404);
 
-    const [merchant] = await this.requireDb().select().from(merchants).where(eq(merchants.id, merchantId));
+    const [merchant] = await this.requireDb()
+      .select()
+      .from(merchants)
+      .where(eq(merchants.id, merchantId));
     if (!merchant) throw new AppError('NOT_FOUND', 'Merchant not found', 404);
 
     // Production rows always carry merchantId. Keep compatibility with the
     // small database-shaped fakes used by the unit tests.
     if (typeof customer.merchantId === 'string') {
       const validation = this.validateMerchantRelationship(customer.merchantId, merchant.id);
-      if (!validation.valid) throw new AppError('INVALID_INPUT', validation.error ?? 'Invalid merchant', 400);
+      if (!validation.valid)
+        throw new AppError('INVALID_INPUT', validation.error ?? 'Invalid merchant', 400);
     }
 
     const clawbackValidation = this.validateRedeemAmount(
@@ -300,12 +318,19 @@ export class StampService {
     }
 
     const txHash = this.hashSignedXdr(signedXdr, intent.networkPassphrase);
-    if (!intent.unsignedTxDigest || intent.unsignedTxDigest.toUpperCase() !== txHash.toUpperCase()) {
+    if (
+      !intent.unsignedTxDigest ||
+      intent.unsignedTxDigest.toUpperCase() !== txHash.toUpperCase()
+    ) {
       throw new AppError('CONFLICT', 'Signed transaction does not match the prepared intent', 409);
     }
     const proof = await this.proofProvider.get(txHash);
     if (!proof || proof.hash.toUpperCase() !== txHash.toUpperCase()) {
-      throw new AppError('CONFLICT', 'Horizon proof hash does not match the signed transaction', 409);
+      throw new AppError(
+        'CONFLICT',
+        'Horizon proof hash does not match the signed transaction',
+        409,
+      );
     }
     const [customer] = await this.requireDb()
       .select()
@@ -331,7 +356,8 @@ export class StampService {
         .select()
         .from(stampTransactionIntents)
         .where(eq(stampTransactionIntents.id, intentId));
-      if (!currentIntent) throw new AppError('NOT_FOUND', 'Stamp transaction intent not found', 404);
+      if (!currentIntent)
+        throw new AppError('NOT_FOUND', 'Stamp transaction intent not found', 404);
       if (currentIntent.status === 'confirmed' && currentIntent.txHash) {
         return { status: 'confirmed', intentId, txHash: currentIntent.txHash };
       }
@@ -349,7 +375,11 @@ export class StampService {
         horizonUrl: stellar.horizonUrl,
       });
       if (!configValidation.valid) {
-        throw new AppError('INVALID_INPUT', configValidation.error ?? 'Invalid chain configuration', 400);
+        throw new AppError(
+          'INVALID_INPUT',
+          configValidation.error ?? 'Invalid chain configuration',
+          400,
+        );
       }
 
       const [claimed] = await tx
@@ -445,10 +475,7 @@ export class StampService {
       throw new AppError('CONFLICT', 'Stamp transaction intent has expired', 409);
     }
 
-    const [customer] = await db
-      .select()
-      .from(customers)
-      .where(eq(customers.id, intent.customerId));
+    const [customer] = await db.select().from(customers).where(eq(customers.id, intent.customerId));
     if (!customer) throw new AppError('NOT_FOUND', 'Customer not found', 404);
 
     const configValidation = validateStampAssetConfig({
@@ -459,7 +486,11 @@ export class StampService {
       horizonUrl: stellar.horizonUrl,
     });
     if (!configValidation.valid) {
-      throw new AppError('INVALID_INPUT', configValidation.error ?? 'Invalid chain configuration', 400);
+      throw new AppError(
+        'INVALID_INPUT',
+        configValidation.error ?? 'Invalid chain configuration',
+        400,
+      );
     }
     if (!StrKey.isValidEd25519PublicKey(customer.stellarAddress)) {
       throw new AppError('INVALID_INPUT', 'Customer has an invalid Stellar public key', 400);
@@ -475,17 +506,18 @@ export class StampService {
       const issuerAccount = await stellar.server.loadAccount(intent.assetIssuer);
       const baseFee = await stellar.server.fetchBaseFee();
       const asset = new Asset(intent.assetCode, intent.assetIssuer);
-      const operation = intent.operation === 'issue'
-        ? Operation.payment({
-            destination: customer.stellarAddress,
-            asset,
-            amount: String(intent.amount),
-          })
-        : Operation.clawback({
-            from: customer.stellarAddress,
-            asset,
-            amount: String(intent.amount),
-          });
+      const operation =
+        intent.operation === 'issue'
+          ? Operation.payment({
+              destination: customer.stellarAddress,
+              asset,
+              amount: String(intent.amount),
+            })
+          : Operation.clawback({
+              from: customer.stellarAddress,
+              asset,
+              amount: String(intent.amount),
+            });
       const transaction = new TransactionBuilder(issuerAccount, {
         fee: String(baseFee),
         networkPassphrase: intent.networkPassphrase,
@@ -496,7 +528,11 @@ export class StampService {
       unsignedXdr = transaction.toXDR();
       unsignedTxDigest = Buffer.from(transaction.hash()).toString('hex').toUpperCase();
     } catch {
-      throw new AppError('INTERNAL', 'Unable to build unsigned Stellar transaction from Horizon state', 502);
+      throw new AppError(
+        'INTERNAL',
+        'Unable to build unsigned Stellar transaction from Horizon state',
+        502,
+      );
     }
 
     const [updated] = await db
@@ -580,15 +616,9 @@ export class StampService {
     }
 
     const db = this.requireDb();
-    const [customer] = await db
-      .select()
-      .from(customers)
-      .where(eq(customers.id, params.customerId));
+    const [customer] = await db.select().from(customers).where(eq(customers.id, params.customerId));
     if (!customer) throw new AppError('NOT_FOUND', 'Customer not found', 404);
-    const [merchant] = await db
-      .select()
-      .from(merchants)
-      .where(eq(merchants.id, params.merchantId));
+    const [merchant] = await db.select().from(merchants).where(eq(merchants.id, params.merchantId));
     if (!merchant) throw new AppError('NOT_FOUND', 'Merchant not found', 404);
 
     const relationshipValidation = this.validateMerchantRelationship(
@@ -610,7 +640,11 @@ export class StampService {
       horizonUrl: stellar.horizonUrl,
     });
     if (!configValidation.valid) {
-      throw new AppError('INVALID_INPUT', configValidation.error ?? 'Invalid chain configuration', 400);
+      throw new AppError(
+        'INVALID_INPUT',
+        configValidation.error ?? 'Invalid chain configuration',
+        400,
+      );
     }
 
     const requestHash = createHash('sha256')
@@ -638,7 +672,11 @@ export class StampService {
       .limit(1);
     if (existing) {
       if (existing.requestHash !== requestHash) {
-        throw new AppError('CONFLICT', 'Idempotency-Key was already used for another stamp action', 409);
+        throw new AppError(
+          'CONFLICT',
+          'Idempotency-Key was already used for another stamp action',
+          409,
+        );
       }
       if (existing.status === 'pending' && existing.expiresAt.getTime() <= Date.now()) {
         throw new AppError('CONFLICT', 'Stamp transaction intent has expired', 409);
@@ -712,7 +750,11 @@ export class StampService {
 
   private hashSignedXdr(signedXdr: string, networkPassphrase: string): string {
     if (!signedXdr || signedXdr.length > 100_000 || !/^[A-Za-z0-9+/]+=*$/.test(signedXdr)) {
-      throw new AppError('INVALID_INPUT', 'signedXdr must be a valid signed Stellar transaction', 400);
+      throw new AppError(
+        'INVALID_INPUT',
+        'signedXdr must be a valid signed Stellar transaction',
+        400,
+      );
     }
     try {
       const transaction = TransactionBuilder.fromXDR(signedXdr, networkPassphrase);
@@ -721,7 +763,11 @@ export class StampService {
       }
       return Buffer.from(transaction.hash()).toString('hex').toUpperCase();
     } catch {
-      throw new AppError('INVALID_INPUT', 'signedXdr is not a valid signed Stellar transaction', 400);
+      throw new AppError(
+        'INVALID_INPUT',
+        'signedXdr is not a valid signed Stellar transaction',
+        400,
+      );
     }
   }
 
@@ -743,7 +789,10 @@ export class StampService {
       };
     }
     if (stampsToClawback !== required) {
-      return { valid: false, error: `Must clawback exactly ${required} stamps for full redemption` };
+      return {
+        valid: false,
+        error: `Must clawback exactly ${required} stamps for full redemption`,
+      };
     }
     return { valid: true };
   }
@@ -771,7 +820,8 @@ export class StampService {
   }
 
   private requireDb(): Database {
-    if (!this.db) throw new AppError('INTERNAL', 'Database is not configured outside demo mode', 500);
+    if (!this.db)
+      throw new AppError('INTERNAL', 'Database is not configured outside demo mode', 500);
     return this.db;
   }
 

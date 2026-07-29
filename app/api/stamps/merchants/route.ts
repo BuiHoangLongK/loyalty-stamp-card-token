@@ -1,6 +1,6 @@
+import { env } from '@/server/config/env';
 import { db } from '@/server/db/client';
 import { merchants } from '@/server/db/schema';
-import { env } from '@/server/config/env';
 import { fromError, ok } from '@/server/lib/http';
 import { getDemoStore } from '@/server/service/demo.store';
 

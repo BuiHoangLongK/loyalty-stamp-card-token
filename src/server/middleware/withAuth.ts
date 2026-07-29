@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm';
+import { env } from '@/server/config/env';
 import { db } from '@/server/db/client';
 import { sessions } from '@/server/db/schema';
 import { readSessionCookie } from '@/server/lib/cookies';
 import { AppError } from '@/server/lib/http';
-import { env } from '@/server/config/env';
 import { getDemoStore } from '@/server/service/demo.store';
 import type { Middleware } from './compose';
 
