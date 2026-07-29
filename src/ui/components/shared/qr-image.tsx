@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 
@@ -43,6 +44,7 @@ export function QrImage({
       />
     );
   }
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} width={size} height={size} alt="QR code" className={className} />;
+  return (
+    <Image src={src} width={size} height={size} alt="QR code" className={className} unoptimized />
+  );
 }
