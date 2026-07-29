@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Database } from '@/server/db/client';
 import { AppError } from '@/server/lib/http';
 import { StampService } from '@/server/service/stamp.service';
@@ -25,6 +25,7 @@ function makeDb() {
     builder.values = self;
     builder.set = self;
     builder.returning = () => Promise.resolve(resolver());
+    // biome-ignore lint/suspicious/noThenProperty: Drizzle builders are intentionally awaitable.
     builder.then = (onF: (v: Row[]) => unknown) => Promise.resolve(resolver()).then(onF);
     return builder;
   };
